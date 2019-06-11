@@ -44,22 +44,20 @@ class NetworkTest extends UnitTestCase {
   public function testSocialAuthLoginBlock () {
     $this->configuration = array();
     $this->social_auth_config = $this->createMock(ImmutableConfig::class);
-    $collection = $this->getMockBuilder('Drupal\social_auth\Plugin\Block\SocialAuthLoginBlock')
+    $socialAuthLoginBlock = $this->getMockBuilder(SocialAuthLoginBlock::class)
                        ->setConstructorArgs(array($this->configuration, $this->plugin_id, $this->plugin_definition, $this->social_auth_config))
                        ->getMock();
+    $socialAuthLoginBlock->method('build')
+               ->willReturn(['#theme' => 'login_with', '#social_networks' => $this->social_auth_config->get('auth')]);
     $this->assertTrue(
-        method_exists($collection, 'create'),
+        method_exists($socialAuthLoginBlock, 'create'),
           'OAuth2Manager does not implements create function/method'
         );
     $this->assertTrue(
-        method_exists($collection, 'build'),
+        method_exists($socialAuthLoginBlock, 'build'),
           'OAuth2Manager does not implements build function/method'
         );
-    $collection->method('build')
-               ->willReturn(['#theme' => 'login_with', '#social_networks' => $this->social_auth_config->get('auth')]);
-    // $encoded = json_encode($collection->build()['#theme']);
-    // $this->assertInternalType('string', $encoded);
-    $this->assertEquals(['#theme' => 'login_with', '#social_networks' => $this->social_auth_config->get('auth')], $collection->build());
+    $this->assertEquals(['#theme' => 'login_with', '#social_networks' => $this->social_auth_config->get('auth')], $socialAuthLoginBlock->build());
   }
 
   /**
@@ -75,15 +73,15 @@ class NetworkTest extends UnitTestCase {
     $logger_factory = $this->createMock(LoggerChannelFactoryInterface::class);
     $settings = new Settings($setting);
     // $settings = new ReflectionClass(Settings::class);
-    $collection = $this->getMockBuilder('Drupal\social_auth\Plugin\Network\NetworkBase')
+    $networkBase = $this->getMockBuilder(NetworkBase::class)
                        ->setConstructorArgs(array($this->configuration, $this->plugin_id, $this->plugin_definition, $entity_type_manager, $config_factory, $logger_factory, $settings))
                        ->getMockForAbstractClass();
     $this->assertTrue(
-      method_exists($collection, 'create'),
+      method_exists($networkBase, 'create'),
         'NetworkBase does not implements create function/method'
       );
   }
-}
 
+}
 
  ?>
