@@ -8,7 +8,9 @@ use Drupal\social_api\Plugin\NetworkManager;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 
-
+/**
+ * Defines Test Class for Controller.
+ */
 class ControllerTest extends UnitTestCase {
 
   /**
