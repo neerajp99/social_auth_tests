@@ -1,10 +1,8 @@
 <?php
 
 use Drupal\Tests\UnitTestCase;
-use PHPUnit\Framework\TestCase;
 use Drupal\social_auth\Event\BeforeRedirectEvent;
 use Drupal\social_auth\SocialAuthDataHandler;
-use Symfony\Component\EventDispatcher\Event;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\social_auth\Event\FailedAuthenticationEvent;
 use Drupal\social_auth\Event\SocialAuthEvents;
@@ -12,161 +10,197 @@ use Drupal\user\UserInterface;
 use Drupal\social_auth\Event\UserEvent;
 use Drupal\social_auth\Event\UserFieldsEvent;
 
-
-
+/**
+ * Defines Test class for Event.
+ */
 class EventTest extends UnitTestCase {
-  protected $data_handler;
-  protected $pluginId = 'drupal123';
-  protected $destination = 'drupal123';
-  protected $error = "error404";
-  protected $response = 'drupal';
-  protected $user = 'drupaluser';
-  protected $user_fields;
-
 
   /**
-   * __construct function
+   * Tests for class testBeforeRedirectEvent.
    */
-  public function __construct() {
-       parent::__construct();
-   }
+  public function testBeforeRedirectEvent() {
 
-  /**
-   * {@inheritdoc}
-   */
+    $pluginId = 'drupal123';
+    $destination = 'drupal123';
+    $data_handler = $this->createMock(SocialAuthDataHandler::class);
 
-  public function setUp() {
-    parent::setUp();
+    $beforeRedirectEvent = $this->getMockBuilder(BeforeRedirectEvent::class)
+      ->setConstructorArgs([$data_handler,
+        $pluginId,
+        $destination,
+      ])
+      ->setMethods(null)
+      ->getMock();
+
+
+    $this->assertTrue(
+      method_exists($beforeRedirectEvent, 'getDataHandler'),
+      'BeforeRedirectEvent class does not implements getDataHandler function/method'
+      );
+
+    $this->assertTrue(
+      method_exists($beforeRedirectEvent, 'getPluginId'),
+      'BeforeRedirectEvent class does not implements getPluginId function/method'
+    );
+
+    $this->assertTrue(
+      method_exists($beforeRedirectEvent, 'getDestination'),
+      'BeforeRedirectEvent class does not implements getDestination function/method'
+    );
+
+    $this->assertSame('drupal123', $beforeRedirectEvent->getPluginId());
+    $this->assertSame('drupal123', $beforeRedirectEvent->getDestination());
+    $this->assertEquals($data_handler, $beforeRedirectEvent->getDataHandler());
   }
 
   /**
-   * test for class testBeforeRedirectEvent
+   * Tests for class FailedAuthenticationEvent.
    */
+  public function testFailedAuthenticationEvent() {
 
-  public function testBeforeRedirectEvent () {
-    $this->data_handler = $this->createMock(SocialAuthDataHandler::class);
-    $collection = $this->getMockBuilder('Drupal\social_auth\Event\BeforeRedirectEvent')
-                       ->setConstructorArgs(array($this->data_handler, $this->pluginId, $this->destination))
-                       ->setMethods(array('getDataHandler', 'getPluginId', 'getDestination'))
-                       ->getMock();
+    $error = "error404";
+    $pluginId = 'drupal123';
+    $data_handler = $this->createMock(SocialAuthDataHandler::class);
+    $response = $this->createMock(RedirectResponse::class);
+
+    $failedAuthenticationEvent = $this->getMockBuilder(FailedAuthenticationEvent::class)
+      ->setConstructorArgs([$data_handler,
+        $pluginId,
+        $error,
+      ])
+      ->setMethods(null)
+      ->getMock();
+
+    // parent::__construct($data_handler, $pluginId, $error);.
+    $failedAuthenticationEvent->setResponse($response);
 
     $this->assertTrue(
-      method_exists($collection, 'getDataHandler'),
-      'BeforeRedirectEvent does not have getDataHandler function/method'
+      method_exists($failedAuthenticationEvent, 'getDataHandler'),
+      'FailedAuthenticationEvent class does not implements getDataHandler function/method'
+    );
+
+    $this->assertTrue(
+        method_exists($failedAuthenticationEvent, 'getPluginId'),
+        'FailedAuthenticationEvent class does not implements getPluginId function/method'
       );
     $this->assertTrue(
-      method_exists($collection, 'getPluginId'),
-      'BeforeRedirectEvent does not have getPluginId function/method'
-    );
+        method_exists($failedAuthenticationEvent, 'getError'),
+        'FailedAuthenticationEvent class does not implements getError function/method'
+        );
+
     $this->assertTrue(
-      method_exists($collection, 'getDestination'),
-      'BeforeRedirectEvent does not have getDestination function/method'
-    );
-    $collection->method('getPluginId')
-               ->willReturn($this->pluginId);
-    $collection->method('getDestination')
-               ->willReturn($this->destination);
-    $collection->method('getDataHandler')
-               ->willReturn($this->data_handler);
-    $this->assertSame('drupal123', $collection->getPluginId());
-    $this->assertSame('drupal123', $collection->getDestination());
+        method_exists($failedAuthenticationEvent, 'getResponse'),
+        'FailedAuthenticationEvent class does not implements getResponse function/method'
+      );
+    $this->assertTrue(
+        method_exists($failedAuthenticationEvent, 'setResponse'),
+        'FailedAuthenticationEvent class does not implements setResponse function/method'
+        );
+
+    $this->assertTrue(
+        method_exists($failedAuthenticationEvent, 'hasResponse'),
+        'FailedAuthenticationEvent class does not implements hasResponse function/method'
+      );
+
+    $this->assertEquals($response, $failedAuthenticationEvent->getResponse());
+    $this->assertTrue($failedAuthenticationEvent->hasResponse());
+    $this->assertEquals('error404', $failedAuthenticationEvent->getError());
+    $this->assertEquals('drupal123', $failedAuthenticationEvent->getPluginId());
+    $this->assertEquals(TRUE, $failedAuthenticationEvent->hasResponse());
+    $this->assertEquals($data_handler, $failedAuthenticationEvent->getDataHandler());
   }
 
   /**
-   * test for class FailedAuthenticationEvent
+   * Tests for class SocialAuthEvents.
    */
+  public function testSocialAuthEvents() {
+    $reflection = new ReflectionClass(SocialAuthEvents::class);
 
-   public function testFailedAuthenticationEvent () {
-     $this->data_handler = $this->createMock(SocialAuthDataHandler::class);
-     $collection = $this->getMockBuilder('Drupal\social_auth\Event\FailedAuthenticationEvent')
-                        ->setConstructorArgs(array($this->data_handler, $this->pluginId, $this->error))
-                        ->setMethods(array('getDataHandler', 'getPluginId', 'getError'))
-                        ->getMock();
-     // $reflector = new ReflectionClass( 'Drupal\social_auth\Event\FailedAuthenticationEvent' );
-     // $method = $reflector->getMethod('setResponse');
-     // $method->setAccessible( true );
-     // $method->invokeArgs($collection, array($responses));
-     $responses = $this->createMock(RedirectResponse::class);
-     $collection->setResponse($responses);
-     $this->assertEquals($responses, $collection->getResponse());
-     // var_dump($collection->hasResponse());
-     $this->assertEquals(true, $collection->hasResponse());
-     $collection->method('getError')
-                ->willReturn($this->error);
-     $collection->method('getPluginId')
-                ->willReturn($this->pluginId);
-     $collection->method('getDataHandler')
-                ->willReturn($this->data_handler);
-     $this->assertEquals('error404', $collection->getError());
-     $this->assertEquals('drupal123', $collection->getPluginId());
-   }
+    $user_fields = $reflection->getConstant('USER_FIELDS');
+    $user_created = $reflection->getConstant('USER_CREATED');
+    $user_login = $reflection->getConstant('USER_LOGIN');
+    $user_redirect = $reflection->getConstant('BEFORE_REDIRECT');
+    $faield_auth = $reflection->getConstant('FAILED_AUTH');
 
-   /**
-    * tests for class SocialAuthEvents
-    */
+    $this->assertEquals('social_auth.user.fields',
+          $reflection->getConstant('USER_FIELDS'),
+          'The constant values is not matched');
 
-   public function testSocialAuthEvents () {
-     $reflection = new ReflectionClass('Drupal\social_auth\Event\SocialAuthEvents');
-     $user_fields = $reflection->getConstant('USER_FIELDS');
-     $user_created = $reflection->getConstant('USER_CREATED');
-     $user_login = $reflection->getConstant('USER_LOGIN');
-     $user_redirect = $reflection->getConstant('BEFORE_REDIRECT');
-     $faield_auth = $reflection->getConstant('FAILED_AUTH');
-     $this->assertEquals('social_auth.user.fields',
-            $reflection->getConstant('USER_FIELDS'),
-            'The constant values is not matched');
+    $this->assertEquals('social_auth.user.created',
+          $reflection->getConstant('USER_CREATED'),
+          'The constant values is not matched');
 
-     $this->assertEquals('social_auth.user.created',
-            $reflection->getConstant('USER_CREATED'),
-            'The constant values is not matched');
+    $this->assertEquals('social_auth.user.login',
+          $reflection->getConstant('USER_LOGIN'),
+          'The constant values is not matched');
 
-     $this->assertEquals('social_auth.user.login',
-            $reflection->getConstant('USER_LOGIN'),
-            'The constant values is not matched');
+    $this->assertEquals('social_auth.before_redirect',
+          $reflection->getConstant('BEFORE_REDIRECT'),
+          'The constant values is not matched');
 
-     $this->assertEquals('social_auth.before_redirect',
-            $reflection->getConstant('BEFORE_REDIRECT'),
-            'The constant values is not matched');
+    $this->assertEquals('social_auth.failed_authentication',
+          $reflection->getConstant('FAILED_AUTH'),
+          'The constant values is not matched');
+  }
 
-     $this->assertEquals('social_auth.failed_authentication',
-            $reflection->getConstant('FAILED_AUTH'),
-            'The constant values is not matched');
-   }
+  /**
+   * Tests for class UserEvent.
+   */
+  public function testUserEvent() {
+    $pluginId = 'drupal123';
+    $user = $this->createMock(UserInterface::class);
 
-   /**
-    * tests for class UserEvent
-    */
+    $userEvent = $this->getMockBuilder(UserEvent::class)
+      ->setConstructorArgs([$user, $pluginId])
+      ->setMethods(null)
+      ->getMock();
 
-    public function testUserEvent () {
-      $this->user = $this->createMock(UserInterface::class);
-      $collection = $this->getMockBuilder('Drupal\social_auth\Event\UserEvent')
-                         ->setConstructorArgs(array($this->user, $this->pluginId))
-                         ->getMock();
-      $collection->method('getPluginId')
-          ->willReturn($this->pluginId);
-      $collection->method('getUser')
-          ->willReturn($this->user);
-      $this->assertSame('drupal123', $collection->getPluginId());
-    }
+    $this->assertTrue(
+    method_exists($userEvent, 'getPluginId'),
+    'UserEvent class does not implements getPluginId function/method'
+    );
 
-    /**
-     * tests for class UserFieldsEvent
-     */
+    $this->assertTrue(
+    method_exists($userEvent, 'getUser'),
+    'UserEvent class does not implements getUser function/method'
+    );
 
-    public function testUserFieldsEvent () {
-      // $this->user = $this->createMock(UserInterface::class);
-      $this->user_fields = array(1,2,3);
-      $collection = $this->getMockBuilder('Drupal\social_auth\Event\UserFieldsEvent')
-                         ->setConstructorArgs(array($this->user_fields, $this->pluginId))
-                         ->setMethods(array('getPluginId'))
-                         ->getMock();
-      $collection->method('getPluginId')
-                 ->willReturn($this->pluginId);
-      $collection->setUserFields($this->user_fields);
-      $this->assertEquals($this->user_fields, $collection->getUserFields());
-      $this->assertSame('drupal123', $collection->getPluginId());
-    }
+    $this->assertSame('drupal123', $userEvent->getPluginId());
+    $this->assertEquals($user, $userEvent->getUser());
+  }
+
+  /**
+   * Tests for class UserFieldsEvent.
+   */
+  public function testUserFieldsEvent() {
+    // $this->user = $this->createMock(UserInterface::class);.
+    $pluginId = 'drupal123';
+    $user_fields = ['userfield', 'userfield2'];
+
+    $userFieldsEvent = $this->getMockBuilder(UserFieldsEvent::class)
+      ->setConstructorArgs([$user_fields, $pluginId])
+      ->setMethods(null)
+      ->getMock();
+
+    $userFieldsEvent->setUserFields($user_fields);
+
+    $this->assertTrue(
+    method_exists($userFieldsEvent, 'getUserFields'),
+    'UserFieldsEvent does not implements getUserFields function/method'
+    );
+
+    $this->assertTrue(
+    method_exists($userFieldsEvent, 'setUserFields'),
+    'UserFieldsEvent does not implements setUserFields function/method'
+    );
+
+    $this->assertTrue(
+    method_exists($userFieldsEvent, 'getPluginId'),
+    'UserFieldsEvent does not implements getPluginId function/method'
+    );
+
+    $this->assertSame('drupal123', $userFieldsEvent->getPluginId());
+    $this->assertEquals($user_fields, $userFieldsEvent->getUserFields());
+  }
+
 }
-
-
- ?>
