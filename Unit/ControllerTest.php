@@ -15,7 +15,11 @@ use Drupal\social_auth\User\UserAuthenticator;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
+<<<<<<< HEAD
  * Defines Controller Test Class.
+=======
+ * Defines Test Class for Controller.
+>>>>>>> 602f02d2dd7b089237a5040e7ff7aa7cc6653d91
  */
 class ControllerTest extends UnitTestCase {
 
